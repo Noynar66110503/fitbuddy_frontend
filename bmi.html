@@ -78,7 +78,7 @@
 
     document.getElementById('bmiResult').innerText = `Your BMI: ${bmi.toFixed(2)} (Category: ${category})`;
 
-    fetch('https://fit-buddy-test-bn.vercel.app/bmi', {
+    fetch('https://fitbuddy-backend-alpha.vercel.app/bmi', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -115,7 +115,7 @@ function logout() {
 let bmiChart = null; // ตัวแปรสำหรับเก็บอ้างอิงถึงกราฟ
 
 function createBMIChart(userId) {
-    fetch(`https://fit-buddy-test-bn.vercel.app/getUserBMI?userId=${userId}`)
+    fetch(`https://fitbuddy-backend-alpha.vercel.app/getUserBMI?userId=${userId}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
