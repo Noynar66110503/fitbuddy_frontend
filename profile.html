@@ -87,142 +87,45 @@
     </footer>
 
     <script>
+        function logout() {
+            localStorage.removeItem('userId');
+            window.location.href = '/login.html';
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-        const userId = localStorage.getItem('userId');
+            const userId = localStorage.getItem('userId');
 
-        if (!userId) {
-            console.log('No user ID found, redirecting to login');
-            window.location.href = '/login.html'; // Redirect if not logged in
-            return;
-        }
+            if (!userId) {
+                window.location.href = '/login.html'; // Redirect if not logged in
+                return;
+            }
 
-        console.log('Loading profile for user ID:', userId);
-
-        // สร้าง function สำหรับลองเรียก API หลายๆ endpoints
-        function tryMultipleEndpoints() {
-            // รายการ endpoints ที่จะลองเรียก
-            const endpoints = [
-                `https://fitbuddy-backend-alpha.vercel.app/api/profile/${userId}`,
-                `https://fitbuddy-backend-alpha.vercel.app/api/users/${userId}`,
-                `https://fitbuddy-backend-alpha.vercel.app/profile/${userId}`
-            ];
-            
-            // ตรวจสอบการเชื่อมต่อกับเซิร์ฟเวอร์ก่อน
-            fetch('https://fitbuddy-backend-alpha.vercel.app/api/ping')
-                .then(pingRes => {
-                    console.log('Server ping response:', pingRes.status);
-                    return tryNextEndpoint(0);
+            // ฟังก์ชันดึงข้อมูลโปรไฟล์จาก API
+            fetch(`https://fitbuddy-backend-alpha.vercel.app/api/profile/${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('name').textContent = data.name || 'N/A';
+                    document.getElementById('age').textContent = data.age || 'N/A';
+                    document.getElementById('gender').textContent = data.gender || 'N/A';
+                    document.getElementById('email').textContent = data.email || 'N/A';
+                    document.getElementById('weight').textContent = data.weight || 'N/A';
+                    document.getElementById('height').textContent = data.height || 'N/A';
+                    document.getElementById('bmi').textContent = data.bmi || 'N/A';
+                    document.getElementById('diseases').textContent = data.diseases || 'None';
+                    document.getElementById('exercise-types').textContent = data.exercise_types || 'None';
+                    document.getElementById('detailed-guidelines').textContent = data.detailed_guidelines || 'None';
                 })
-                .catch(pingErr => {
-                    console.error('Server ping failed:', pingErr);
-                    showProfileError('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+                .catch(error => {
+                    console.error('Error:', error);
+                    // แสดงข้อความเมื่อโหลดข้อมูลล้มเหลว
+                    document.getElementById('name').textContent = 'Error loading data.';
                 });
-                
-            // ฟังก์ชันทดลองเรียก endpoint ถัดไป
-            function tryNextEndpoint(index) {
-                if (index >= endpoints.length) {
-                    // ลองทุก endpoint แล้วไม่สำเร็จ
-                    showProfileError('ไม่สามารถโหลดข้อมูลโปรไฟล์ได้');
-                    return;
-                }
-                
-                console.log(`Trying endpoint ${index + 1}/${endpoints.length}: ${endpoints[index]}`);
-                
-                fetch(endpoints[index])
-                    .then(response => {
-                        console.log(`Endpoint ${index + 1} response:`, response.status);
-                        if (!response.ok) {
-                            throw new Error(`Endpoint ${index + 1} returned ${response.status}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (!data) {
-                            throw new Error(`No data received from endpoint ${index + 1}`);
-                        }
-                        displayProfileData(data);
-                    })
-                    .catch(error => {
-                        console.error(`Error with endpoint ${index + 1}:`, error);
-                        // ลองเรียก endpoint ถัดไป
-                        tryNextEndpoint(index + 1);
-                    });
-            }
-        }
-        
-        // แสดงข้อผิดพลาด
-        function showProfileError(message) {
-            const elements = [
-                'name', 'age', 'gender', 'email', 'weight', 
-                'height', 'bmi', 'diseases', 'exercise-types', 'detailed-guidelines'
-            ];
-            
-            elements.forEach(id => {
-                document.getElementById(id).textContent = 'N/A';
+
+            // เมื่อคลิกปุ่มแก้ไขโปรไฟล์
+            document.getElementById('editProfileButton').addEventListener('click', function() {
+                window.location.href = '/edit_profile.html'; // เปลี่ยนเส้นทางไปยังหน้าแก้ไขโปรไฟล์
             });
-            
-            document.getElementById('name').textContent = message;
-            alert(message);
-        }
-        
-        // แสดงข้อมูลโปรไฟล์
-        function displayProfileData(data) {
-            console.log('Profile data loaded successfully:', data);
-            
-            // แสดงข้อมูลพื้นฐาน
-            document.getElementById('name').textContent = data.name || 'N/A';
-            document.getElementById('age').textContent = data.age || 'N/A';
-            document.getElementById('gender').textContent = data.gender || 'N/A';
-            document.getElementById('email').textContent = data.email || 'N/A';
-            
-            // แสดงข้อมูลสุขภาพ
-            document.getElementById('weight').textContent = data.weight ? `${data.weight} kg` : 'N/A';
-            document.getElementById('height').textContent = data.height ? `${data.height} cm` : 'N/A';
-            document.getElementById('bmi').textContent = data.bmi ? data.bmi.toFixed(2) : 'N/A';
-            
-            // แสดงข้อมูลโรคประจำตัว
-            if (data.diseases) {
-                if (Array.isArray(data.diseases) && data.diseases.length > 0) {
-                    document.getElementById('diseases').textContent = data.diseases.join(', ');
-                } else if (typeof data.diseases === 'string' && data.diseases.trim() !== '') {
-                    document.getElementById('diseases').textContent = data.diseases;
-                } else {
-                    document.getElementById('diseases').textContent = 'None';
-                }
-            } else {
-                document.getElementById('diseases').textContent = 'None';
-            }
-            
-            // แสดงประเภทการออกกำลังกาย
-            if (data.exercise_types) {
-                if (Array.isArray(data.exercise_types) && data.exercise_types.length > 0) {
-                    document.getElementById('exercise-types').textContent = data.exercise_types.join(', ');
-                } else if (typeof data.exercise_types === 'string' && data.exercise_types.trim() !== '') {
-                    document.getElementById('exercise-types').textContent = data.exercise_types;
-                } else {
-                    document.getElementById('exercise-types').textContent = 'None';
-                }
-            } else {
-                document.getElementById('exercise-types').textContent = 'None';
-            }
-            
-            // แสดงคำแนะนำโดยละเอียด
-            document.getElementById('detailed-guidelines').textContent = data.detailed_guidelines || 'None';
-        }
-        
-        // เริ่มทดลองเรียก endpoints
-        tryMultipleEndpoints();
-
-        // เมื่อคลิกปุ่มแก้ไขโปรไฟล์
-        document.getElementById('editProfileButton').addEventListener('click', function() {
-            window.location.href = '/edit_profile.html';
         });
-    });
-
-    function logout() {
-        localStorage.removeItem('userId');
-        window.location.href = '/login.html';
-    }
     </script>
     
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
