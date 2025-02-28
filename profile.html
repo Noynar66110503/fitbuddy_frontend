@@ -102,13 +102,13 @@
         function tryMultipleEndpoints() {
             // รายการ endpoints ที่จะลองเรียก
             const endpoints = [
-                `https://fit-buddy-test-bn.vercel.app/api/profile/${userId}`,
-                `https://fit-buddy-test-bn.vercel.app/api/users/${userId}`,
-                `https://fit-buddy-test-bn.vercel.app/profile/${userId}`
+                `https://fitbuddy-backend-alpha.vercel.app/api/profile/${userId}`,
+                `https://fitbuddy-backend-alpha.vercel.app/api/users/${userId}`,
+                `https://fitbuddy-backend-alpha.vercel.app/profile/${userId}`
             ];
             
             // ตรวจสอบการเชื่อมต่อกับเซิร์ฟเวอร์ก่อน
-            fetch('https://fit-buddy-test-bn.vercel.app/api/ping')
+            fetch('https://fitbuddy-backend-alpha.vercel.app/api/ping')
                 .then(pingRes => {
                     console.log('Server ping response:', pingRes.status);
                     return tryNextEndpoint(0);

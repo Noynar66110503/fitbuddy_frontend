@@ -203,7 +203,7 @@
                 const email = document.getElementById('newEmail').value;
                 const password = document.getElementById('newPassword').value;
     
-                fetch('/users', {
+                fetch('https://fitbuddy-backend-alpha.vercel.app/users', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -231,7 +231,7 @@
                 const email = prompt('ใส่อีเมลใหม่:');
                 const password = prompt('ใส่รหัสผ่านใหม่:');
     
-                fetch(`/users/${userId}`, {
+                fetch(`https://fitbuddy-backend-alpha.vercel.app/users/${userId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
@@ -252,7 +252,7 @@
     
             function deleteUser(userId) {
                 if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้นี้?')) {
-                    fetch(`/users/${userId}`, {
+                    fetch(`https://fitbuddy-backend-alpha.vercel.app/users/${userId}`, {
                         method: 'DELETE'
                     })
                     .then(response => response.text())
