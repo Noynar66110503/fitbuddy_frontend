@@ -168,7 +168,7 @@
     
         <script>
             function fetchUsers() {
-                fetch('/users')
+                fetch('https://fitbuddy-backend-alpha.vercel.app/users')
                     .then(response => response.json())
                     .then(users => {
                         const tableBody = document.querySelector('#userTable tbody');

@@ -144,7 +144,7 @@
             }
 
             // Fetch user data to pre-fill the form
-            fetch(`/api/profile/${userId}`)
+            fetch(`https://fitbuddy-backend-alpha.vercel.app/api/profile/${userId}`)
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('name').value = data.name || '';

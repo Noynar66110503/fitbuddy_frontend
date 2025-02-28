@@ -74,7 +74,7 @@
         const submitDiseaseButton = document.getElementById('submitDisease');
         const userId = localStorage.getItem('userId');
 
-        fetch('/diseases')
+        fetch('https://fitbuddy-backend-alpha.vercel.app/diseases')
             .then(response => response.json())
             .then(diseases => {
                 diseases.forEach(disease => {
@@ -89,7 +89,7 @@
         submitDiseaseButton.addEventListener('click', function() {
             const diseaseId = diseaseSelect.value;
             if (!diseaseId) return;
-            fetch(`/disease/${diseaseId}`)
+            fetch(`https://fitbuddy-backend-alpha.vercel.app/disease/${diseaseId}`)
                 .then(response => response.json())
                 .then(disease => {
                     diseaseInfoDiv.innerHTML = `

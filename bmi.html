@@ -111,7 +111,7 @@
         
     <script>
         function createBMIChart(userId) {
-            fetch(`/getUserBMI?userId=${userId}`)
+            fetch(`https://fitbuddy-backend-alpha.vercel.app/getUserBMI?userId=${userId}`)
               .then(response => response.json())
               .then(data => {
                 const ctx = document.getElementById('bmiChart').getContext('2d');
