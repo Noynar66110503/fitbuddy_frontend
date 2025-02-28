@@ -60,55 +60,136 @@
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        document.getElementById('bmiForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const weight = parseFloat(document.getElementById('weight').value);
-            const heightCm = parseFloat(document.getElementById('height').value);
-            const height = heightCm / 100; // แปลงเซนติเมตรเป็นเมตร
-            const userId = localStorage.getItem('userId');
-    
-            if (isNaN(weight) || weight <= 0 || isNaN(heightCm) || heightCm <= 0) {
-                alert('กรุณากรอกน้ำหนักและส่วนสูงให้ถูกต้อง');
-                return;
-            }
-    
-            const bmi = weight / (height * height);
-            const category = getBMICategory(bmi);
-    
-            document.getElementById('bmiResult').innerText = `Your BMI: ${bmi.toFixed(2)} (Category: ${category})`;
-    
-            fetch('/bmi', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ userId, weight, height: heightCm, bmi })
-            })
-            .then(response => response.text())
-            .then(data => {
-                alert(data);
-                window.location.href = '/disease.html';
-            })
-            .catch(error => console.error('Error:', error));
-        });
-    
-        function getBMICategory(bmi) {
-            if (bmi < 18.5) return 'Underweight';
-            if (bmi < 25) return 'Normal weight';
-            if (bmi < 30) return 'Overweight';
-            return 'Obese';
-        }
-    
-        // แก้ไข: ลบโค้ดที่อ้างถึงปุ่ม backButton ที่ไม่มีอยู่จริง
-    
-
-    
-        function logout() {
-            localStorage.removeItem('userId');
-            window.location.href = '/login.html';
-        }
-    </script>
         
+        document.getElementById('bmiForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const weight = parseFloat(document.getElementById('weight').value);
+    const heightCm = parseFloat(document.getElementById('height').value);
+    const height = heightCm / 100; // แปลงเซนติเมตรเป็นเมตร
+    const userId = localStorage.getItem('userId');
+
+    if (isNaN(weight) || weight <= 0 || isNaN(heightCm) || heightCm <= 0) {
+        alert('กรุณากรอกน้ำหนักและส่วนสูงให้ถูกต้อง');
+        return;
+    }
+
+    const bmi = weight / (height * height);
+    const category = getBMICategory(bmi);
+
+    document.getElementById('bmiResult').innerText = `Your BMI: ${bmi.toFixed(2)} (Category: ${category})`;
+
+    fetch('https://fit-buddy-test-bn.vercel.app/bmi', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userId, weight, height: heightCm, bmi })
+    })
+    .then(response => response.text())
+    .then(data => {
+        alert(data);
+        // อัพเดตกราฟทันทีหลังจากบันทึกข้อมูล BMI ใหม่
+        createBMIChart(userId);
+        // ไม่ควรนำผู้ใช้ไปหน้า disease.html ทันทีเพื่อให้ดูกราฟที่อัพเดตได้
+        // window.location.href = '/disease.html';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล BMI');
+    });
+});
+
+function getBMICategory(bmi) {
+    if (bmi < 18.5) return 'Underweight';
+    if (bmi < 25) return 'Normal weight';
+    if (bmi < 30) return 'Overweight';
+    return 'Obese';
+}
+
+function logout() {
+    localStorage.removeItem('userId');
+    window.location.href = '/login.html';
+}
+
+// ปรับปรุงฟังก์ชัน createBMIChart ให้ล้างข้อมูลกราฟเดิมก่อนสร้างใหม่
+let bmiChart = null; // ตัวแปรสำหรับเก็บอ้างอิงถึงกราฟ
+
+function createBMIChart(userId) {
+    fetch(`https://fit-buddy-test-bn.vercel.app/getUserBMI?userId=${userId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const ctx = document.getElementById('bmiChart').getContext('2d');
+            
+            // ทำลายกราฟเดิมถ้ามีอยู่
+            if (bmiChart !== null) {
+                bmiChart.destroy();
+            }
+            
+            // สร้างกราฟใหม่
+            bmiChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(item => new Date(item.created_at).toLocaleDateString()),
+                    datasets: [{
+                        label: 'BMI Trend',
+                        data: data.map(item => item.bmi),
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                        borderWidth: 2,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#007bff',
+                        pointBorderColor: '#fff',
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { font: { size: 14 }, color: "#333" }
+                        },
+                        tooltip: { enabled: true, mode: 'index', intersect: false }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: "Date", font: { size: 14, weight: "bold" }, color: "#555" },
+                            ticks: { autoSkip: true, maxTicksLimit: 5 }
+                        },
+                        y: {
+                            title: { display: true, text: "BMI Value", font: { size: 14, weight: "bold" }, color: "#555" },
+                            beginAtZero: false,
+                            min: Math.max(15, Math.min(...data.map(item => item.bmi)) - 2),
+                            max: Math.min(40, Math.max(...data.map(item => item.bmi)) + 2),
+                            ticks: { stepSize: 2 },
+                            grid: { color: "rgba(200, 200, 200, 0.2)" }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching BMI data:', error);
+            document.getElementById('bmiChart').innerHTML = '<p class="text-danger">ไม่สามารถโหลดข้อมูล BMI ได้</p>';
+        });
+}
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const userId = localStorage.getItem('userId');
+        if (userId) {
+            createBMIChart(userId);
+        } else {
+            window.location.href = '/login.html'; // ถ้าไม่มี userId ให้กลับไปหน้า login
+        }
+    });
+    </script>
+    
     <script>
         function createBMIChart(userId) {
             fetch(`https://fitbuddy-backend-alpha.vercel.app/getUserBMI?userId=${userId}`)
