@@ -130,67 +130,107 @@
     </div>
 
     <script>
-        function logout() {
-            localStorage.removeItem('userId');
-            window.location.href = '/login.html';
+            document.addEventListener('DOMContentLoaded', function() {
+        const userId = localStorage.getItem('userId');
+
+        if (!userId) {
+            window.location.href = '/login.html'; // Redirect if not logged in
+            return;
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const userId = localStorage.getItem('userId');
-
-            if (!userId) {
-                window.location.href = '/login.html'; // Redirect if not logged in
-                return;
-            }
-
-            // Fetch user data to pre-fill the form
-            fetch(`https://fitbuddy-backend-alpha.vercel.app/api/profile/${userId}`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('name').value = data.name || '';
-                    document.getElementById('age').value = data.age || '';
-                    document.getElementById('gender').value = data.gender || 'male';
-                    document.getElementById('phone').value = data.phone || '';
-                    document.getElementById('email').value = data.email || '';
-                })
-                .catch(error => console.error('Error:', error));
-
-            document.getElementById('editProfileForm').addEventListener('submit', function(event) {
-                event.preventDefault();
-
-                const formData = new FormData(this);
-                const updatedData = {
-                    name: formData.get('name'),
-                    age: formData.get('age'),
-                    gender: formData.get('gender'),
-                    phone: formData.get('phone'),
-                    email: formData.get('email')
-                };
-
-                fetch(`/users/${userId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(updatedData)
-                })
-                .then(response => response.text())
-                .then(data => {
-                    alert(data); // Show success/error message
-                    window.location.href = '/profile.html'; // Redirect back to profile
-                })
-                .catch(error => console.error('Error:', error));
+        // Fetch user data to pre-fill the form - ปรับ URL ให้ตรงกับ backend
+        fetch(`https://fitbuddy-backend-alpha.vercel.app/api/profile/${userId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data) {
+                    throw new Error('No data received');
+                }
+                
+                // เติมข้อมูลลงในฟอร์ม
+                document.getElementById('name').value = data.name || '';
+                document.getElementById('age').value = data.age || '';
+                document.getElementById('gender').value = data.gender || 'male';
+                document.getElementById('phone').value = data.phone || '';
+                document.getElementById('email').value = data.email || '';
+                
+                console.log('Profile data loaded successfully:', data);
+            })
+            .catch(error => {
+                console.error('Error fetching profile for editing:', error);
+                
+                // ลองเรียก API อีกครั้งโดยลองใช้ endpoint ที่ต่างกัน (fallback)
+                fetch(`https://fitbuddy-backend-alpha.vercel.app/api/users/${userId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data) {
+                            document.getElementById('name').value = data.name || '';
+                            document.getElementById('email').value = data.email || '';
+                            // อื่นๆ ตามข้อมูลที่มี
+                            console.log('Fallback profile data loaded successfully:', data);
+                        } else {
+                            throw new Error('No data received from fallback API');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Fallback API also failed:', err);
+                        alert('ไม่สามารถโหลดข้อมูลโปรไฟล์ได้ กรุณาลองใหม่อีกครั้ง');
+                    });
             });
 
-            document.getElementById('cancelButton').addEventListener('click', function() {
-                window.location.href = '/profile.html'; // Go back to profile
+        document.getElementById('editProfileForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(this);
+            const updatedData = {
+                name: formData.get('name'),
+                age: parseInt(formData.get('age')),
+                gender: formData.get('gender'),
+                phone: formData.get('phone'),
+                email: formData.get('email')
+            };
+
+            // ปรับ URL ให้ตรงกับ backend
+            fetch(`https://fitbuddy-backend-alpha.vercel.app/api/users/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.status);
+                }
+                return response.text();
+            })
+            .then(data => {
+                alert('บันทึกข้อมูลสำเร็จ'); // Show success message
+                window.location.href = '/profile.html'; // Redirect back to profile
+            })
+            .catch(error => {
+                console.error('Error updating profile:', error);
+                alert('ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
             });
         });
 
+        document.getElementById('cancelButton').addEventListener('click', function() {
+            window.location.href = '/profile.html'; // Go back to profile
+        });
+    });
+
+    function logout() {
+        localStorage.removeItem('userId');
+        window.location.href = '/login.html';
+    }
     </script>
-        <footer>
+    <footer>
         <p>© 2025 Personalized Exercise Recommendation System. All Rights Reserved.</p>
-        </footer>
+    </footer>
 
    
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
